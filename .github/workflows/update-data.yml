@@ -1,0 +1,42 @@
+name: Update market dashboard
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 미국 장 마감(16:00 ET) 이후 실행.
+    # 22:30 UTC = 한국시간 다음 날 07:30, 서머타임/표준시간 모두 장 마감 이후.
+    - cron: "30 22 * * 1-5"
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Update JSON data
+        run: python scripts/update_data.py
+
+      - name: Commit changed data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/latest.json
+          if git diff --cached --quiet; then
+            echo "No data changes"
+          else
+            git commit -m "chore: update daily market data"
+            git push
+          fi
