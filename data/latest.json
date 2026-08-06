@@ -1,0 +1,7 @@
+{
+  "updated_at_kst": "최초 GitHub Actions 실행 필요",
+  "market_date": "-",
+  "beta": {"prices":[1,1],"upper":[1.02,1.02],"lower":[0.98,0.98],"current_price":1,"sma_200":1,"signal":{"name":"데이터 갱신 전","is_alert":false,"lines":[["GitHub Actions","실행 필요"]],"drawdown_text":"-"}},
+  "old": {"prices":[1,1],"sma":[1,1],"current_price":1,"sma_200":1,"gap_pct":0,"signal":{"name":"데이터 갱신 전","lines":[["GitHub Actions","실행 필요"]]}},
+  "fgi": {"current":50,"average_30":50,"rating":"neutral","rating_ko":"중립 (Neutral)","values":[50,50]}
+}

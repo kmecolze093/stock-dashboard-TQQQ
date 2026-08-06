@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+  <title>아기티큐 투자 대시보드</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="page-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">DAILY MARKET DASHBOARD</p>
+        <h1>아기티큐 투자 대시보드</h1>
+        <p class="subtitle">미국 시장 마감 후 하루 1회 자동 업데이트</p>
+      </div>
+      <div id="updatedAt" class="updated">데이터 확인 중…</div>
+    </header>
+
+    <section class="grid">
+      <article class="card card-wide" id="betaCard">
+        <div class="card-head">
+          <div>
+            <h2>아기티큐 200일선 매매법 β</h2>
+            <p id="marketDate" class="muted">-</p>
+          </div>
+          <span class="version">v2.1-web</span>
+        </div>
+
+        <div class="split beta-layout">
+          <div class="chart-box"><canvas id="betaChart"></canvas></div>
+          <div class="signal-panel">
+            <div id="betaActions" class="actions"></div>
+            <p id="betaStatus" class="status">-</p>
+            <p id="drawdown" class="metric">-</p>
+            <div class="price-row">
+              <span id="qqqPrice" class="price current">-</span>
+              <span class="slash">/</span>
+              <span id="qqqSma" class="price ma">-</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="card" id="oldCard">
+        <div class="card-head">
+          <div>
+            <h2>원조 200일선</h2>
+            <p class="muted">TQQQ 기준</p>
+          </div>
+          <span class="version">v1.2.5-web</span>
+        </div>
+        <div class="chart-box compact"><canvas id="oldChart"></canvas></div>
+        <div id="oldActions" class="actions"></div>
+        <p id="oldStatus" class="status">-</p>
+        <div class="price-row">
+          <span id="tqqqPrice" class="price current">-</span>
+          <span class="slash">/</span>
+          <span id="tqqqSma" class="price ma">-</span>
+        </div>
+      </article>
+
+      <article class="card" id="fgiCard">
+        <div class="card-head">
+          <div>
+            <h2>공포와 탐욕 지수</h2>
+            <p class="muted">CNN Fear &amp; Greed Index</p>
+          </div>
+          <a href="https://edition.cnn.com/markets/fear-and-greed" target="_blank" rel="noopener">원문</a>
+        </div>
+        <div class="fgi-summary">
+          <div class="gauge-wrap">
+            <canvas id="gauge"></canvas>
+            <strong id="fgiValue">-</strong>
+          </div>
+          <div>
+            <p id="fgiRating" class="fgi-rating">-</p>
+            <p class="metric"><span id="fgiNow">현재 -</span> / <span id="fgiAvg">30일 평균 -</span></p>
+          </div>
+        </div>
+        <div class="chart-box compact"><canvas id="fgiChart"></canvas></div>
+      </article>
+    </section>
+
+    <footer>
+      <p>본 화면은 투자 판단 참고용이며 투자 권유가 아닙니다.</p>
+    </footer>
+  </main>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
