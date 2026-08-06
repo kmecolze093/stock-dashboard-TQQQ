@@ -1,18 +1,30 @@
 from __future__ import annotations
 import json, math, time
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 import requests
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "data" / "latest.json"
-HEADERS = {"User-Agent":"Mozilla/5.0", "Accept":"application/json,text/plain,*/*"}
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "application/json, text/plain, */*",
+}
+CNN_HEADERS = {
+    **HEADERS,
+    "Origin": "https://www.cnn.com",
+    "Referer": "https://www.cnn.com/markets/fear-and-greed",
+}
 YAHOO = "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?range=500d&interval=1d"
-FGI = "https://production.dataviz.cnn.io/index/fearandgreed/graphdata"
+FGI = "https://production.dataviz.cnn.io/index/fearandgreed/graphdata/{start_date}"
 
-def get_json(url: str) -> dict:
-    r = requests.get(url, headers=HEADERS, timeout=30)
+def get_json(url: str, headers: dict | None = None) -> dict:
+    r = requests.get(url, headers=headers or HEADERS, timeout=30)
     r.raise_for_status()
     return r.json()
 
@@ -73,13 +85,35 @@ def beta_signal(qqq, moving, tqqq):
     return {**base,"name":"200일선 밴드 구간 (중립)","lines":[["현재 포지션","유지"],["추가 행동","없음"]]}
 
 def fetch_fgi():
-    raw=get_json(FGI)["fear_and_greed_historical"]["data"][-90:]
+    # CNN은 자동화 요청을 차단할 수 있으므로 날짜 경로와 브라우저 헤더를 함께 사용합니다.
+    start_date = (datetime.now(ZoneInfo("America/New_York")) - timedelta(days=140)).strftime("%Y-%m-%d")
+    url = FGI.format(start_date=start_date)
+    payload = get_json(url, headers=CNN_HEADERS)
+    raw = payload.get("fear_and_greed_historical", {}).get("data", [])[-90:]
+    if not raw:
+        raise RuntimeError("CNN 응답에 fear_and_greed_historical.data가 없습니다.")
     vals=[float(x["y"]) for x in raw]; latest=raw[-1]; rating=str(latest.get("rating", ""))
     ko={"extreme fear":"극공포 (Extreme Fear)","fear":"공포 (Fear)","neutral":"중립 (Neutral)","greed":"탐욕 (Greed)","extreme greed":"극탐욕 (Extreme Greed)"}.get(rating.lower(),rating)
     return {"current":vals[-1],"average_30":sum(vals[-30:])/len(vals[-30:]),"rating":rating,"rating_ko":ko,"values":vals}
 
+def load_previous_fgi():
+    if not OUT.exists():
+        return None
+    try:
+        previous = json.loads(OUT.read_text(encoding="utf-8"))
+        return previous.get("fgi")
+    except (OSError, json.JSONDecodeError):
+        return None
+
 def main():
-    qqq=fetch_yahoo("QQQ"); time.sleep(.4); tqqq=fetch_yahoo("TQQQ"); fgi=fetch_fgi()
+    qqq=fetch_yahoo("QQQ"); time.sleep(.4); tqqq=fetch_yahoo("TQQQ")
+    try:
+        fgi = fetch_fgi()
+    except Exception as exc:
+        fgi = load_previous_fgi()
+        if fgi is None:
+            raise
+        print(f"warning: CNN FGI 갱신 실패, 이전 값을 유지합니다: {exc}")
     qma=sma(qqq["closes"]); tma=sma(tqqq["closes"])
     size=90
     data={
