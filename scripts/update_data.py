@@ -84,6 +84,89 @@ def beta_signal(qqq, moving, tqqq):
     if above>3:return {**base,"name":f"상한선 돌파 {above}일 차 (추세 유지)","lines":[["TQQQ","보유 유지"],["SPYM","추가 매수"]]}
     return {**base,"name":"200일선 밴드 구간 (중립)","lines":[["현재 포지션","유지"],["추가 행동","없음"]]}
 
+def ny_date(ts: int) -> str:
+    return datetime.fromtimestamp(ts, ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
+
+def latest_upper_breakout(qqq: dict, moving: list[float | None], tqqq: dict, chart_size: int = 90):
+    """가장 최근 QQQ 상단 밴드 상향 돌파일과 그날의 TQQQ 종가를 찾습니다."""
+    tqqq_by_date = {ny_date(ts): price for ts, price in zip(tqqq["timestamps"], tqqq["closes"])}
+    breakout_index = None
+    for i in range(1, len(qqq["closes"])):
+        prev_ma, cur_ma = moving[i - 1], moving[i]
+        if prev_ma is None or cur_ma is None:
+            continue
+        prev_above = qqq["closes"][i - 1] >= prev_ma * 1.02
+        cur_above = qqq["closes"][i] >= cur_ma * 1.02
+        if not prev_above and cur_above:
+            date = ny_date(qqq["timestamps"][i])
+            if date in tqqq_by_date:
+                breakout_index = i
+
+    if breakout_index is None:
+        return None
+
+    date = ny_date(qqq["timestamps"][breakout_index])
+    base_tqqq = tqqq_by_date[date]
+    current_tqqq = tqqq["current"]
+    return_pct = (current_tqqq / base_tqqq - 1) * 100
+
+    visible_start = max(0, len(qqq["closes"]) - chart_size)
+    chart_index = breakout_index - visible_start
+    if chart_index < 0 or chart_index >= chart_size:
+        chart_index = -1
+
+    return {
+        "date": date,
+        "qqq_price": qqq["closes"][breakout_index],
+        "tqqq_price": base_tqqq,
+        "current_tqqq_price": current_tqqq,
+        "return_pct": return_pct,
+        "chart_index": chart_index,
+    }
+
+def profit_alert(breakout):
+    """최근 돌파일 TQQQ 종가를 기준으로 현재 도달한 최고 익절 단계를 계산합니다."""
+    if not breakout:
+        return {"triggered": False, "next_level": 10}
+
+    r = breakout["return_pct"]
+    minor_levels = [10, 25, 50]
+    major_levels = []
+    level = 100
+    while level <= 102400:
+        major_levels.append(level)
+        level *= 2
+
+    reached_major = [x for x in major_levels if r >= x]
+    reached_minor = [x for x in minor_levels if r >= x]
+
+    if reached_major:
+        reached = max(reached_major)
+        all_levels = minor_levels + major_levels
+        next_levels = [x for x in all_levels if x > reached]
+        return {
+            "triggered": True,
+            "type": "major",
+            "level": reached,
+            "sell_pct": 50,
+            "current_return_pct": r,
+            "next_level": min(next_levels) if next_levels else None,
+        }
+    if reached_minor:
+        reached = max(reached_minor)
+        all_levels = minor_levels + major_levels
+        next_levels = [x for x in all_levels if x > reached]
+        return {
+            "triggered": True,
+            "type": "minor",
+            "level": reached,
+            "sell_pct": 10,
+            "current_return_pct": r,
+            "next_level": min(next_levels) if next_levels else None,
+        }
+
+    return {"triggered": False, "current_return_pct": r, "next_level": 10}
+
 def fetch_fgi():
     # CNN은 자동화 요청을 차단할 수 있으므로 날짜 경로와 브라우저 헤더를 함께 사용합니다.
     start_date = (datetime.now(ZoneInfo("America/New_York")) - timedelta(days=140)).strftime("%Y-%m-%d")
@@ -116,11 +199,31 @@ def main():
         print(f"warning: CNN FGI 갱신 실패, 이전 값을 유지합니다: {exc}")
     qma=sma(qqq["closes"]); tma=sma(tqqq["closes"])
     size=90
+    breakout = latest_upper_breakout(qqq, qma, tqqq, size)
+    alert = profit_alert(breakout)
     data={
       "updated_at_kst":datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d %H:%M KST"),
       "market_date":datetime.fromtimestamp(qqq["market_ts"],ZoneInfo("America/New_York")).strftime("%Y-%m-%d"),
-      "beta":{"prices":qqq["closes"][-size:],"upper":[x*1.02 for x in qma[-size:]],"lower":[x*.98 for x in qma[-size:]],"current_price":qqq["current"],"sma_200":qma[-1],"signal":beta_signal(qqq["closes"],qma,tqqq["closes"])},
-      "old":{"prices":tqqq["closes"][-size:],"sma":tma[-size:],"current_price":tqqq["current"],"sma_200":tma[-1],"gap_pct":(tqqq["current"]-tma[-1])/tma[-1]*100,"signal":old_signal(tqqq["closes"],tma,tqqq["timestamps"])},
+      "beta":{
+          "dates":[ny_date(x) for x in qqq["timestamps"][-size:]],
+          "prices":qqq["closes"][-size:],
+          "upper":[x*1.02 for x in qma[-size:]],
+          "lower":[x*.98 for x in qma[-size:]],
+          "current_price":qqq["current"],
+          "sma_200":qma[-1],
+          "signal":beta_signal(qqq["closes"],qma,tqqq["closes"]),
+          "breakout":breakout,
+          "profit_alert":alert,
+      },
+      "old":{
+          "dates":[ny_date(x) for x in tqqq["timestamps"][-size:]],
+          "prices":tqqq["closes"][-size:],
+          "sma":tma[-size:],
+          "current_price":tqqq["current"],
+          "sma_200":tma[-1],
+          "gap_pct":(tqqq["current"]-tma[-1])/tma[-1]*100,
+          "signal":old_signal(tqqq["closes"],tma,tqqq["timestamps"]),
+      },
       "fgi":fgi
     }
     OUT.parent.mkdir(parents=True,exist_ok=True); OUT.write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding="utf-8")
