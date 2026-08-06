@@ -31,3 +31,5 @@ python scripts/update_data.py
 python -m http.server 8000
 ```
 브라우저에서 `http://localhost:8000`을 엽니다.
+
+Dashboard deployment reset.
