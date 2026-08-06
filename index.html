@@ -21,73 +21,60 @@
     <section class="grid">
       <article class="card card-wide" id="betaCard">
         <div class="card-head">
-          <div>
-            <h2>아기티큐 200일선 매매법 β</h2>
-            <p id="marketDate" class="muted">-</p>
-          </div>
-          <span class="version">v2.1-web</span>
+          <div><h2>아기티큐 200일선 매매법 β</h2><p id="marketDate" class="muted">-</p></div>
+          <span class="version">v2.3-web</span>
         </div>
-
         <div class="split beta-layout">
-          <div class="chart-box"><canvas id="betaChart"></canvas></div>
+          <div>
+            <div class="chart-box"><canvas id="betaChart"></canvas></div>
+            <div class="legend" aria-label="베타 그래프 설명">
+              <span><i style="--legend:#80dfff"></i>QQQ 현재가</span>
+              <span><i style="--legend:#e070c0"></i>200일선 상단 +2%</span>
+              <span><i style="--legend:#afd485"></i>200일선 하단 -2%</span>
+              <span><i class="marker-dot"></i>최근 상단 밴드 돌파</span>
+            </div>
+          </div>
           <div class="signal-panel">
+            <div id="profitAlert" class="profit-alert hidden"></div>
             <div id="betaActions" class="actions"></div>
             <p id="betaStatus" class="status">-</p>
             <p id="drawdown" class="metric">-</p>
-            <div class="price-row">
-              <span id="qqqPrice" class="price current">-</span>
-              <span class="slash">/</span>
-              <span id="qqqSma" class="price ma">-</span>
-            </div>
+            <div id="breakoutInfo" class="breakout-info">최근 돌파 정보 확인 중…</div>
+            <div class="price-row"><span id="qqqPrice" class="price current">-</span><span class="slash">/</span><span id="qqqSma" class="price ma">-</span></div>
           </div>
         </div>
       </article>
 
       <article class="card" id="oldCard">
-        <div class="card-head">
-          <div>
-            <h2>원조 200일선</h2>
-            <p class="muted">TQQQ 기준</p>
-          </div>
-          <span class="version">v1.2.5-web</span>
-        </div>
+        <div class="card-head"><div><h2>원조 200일선</h2><p class="muted">TQQQ 기준</p></div><span class="version">v1.2.7-web</span></div>
         <div class="chart-box compact"><canvas id="oldChart"></canvas></div>
-        <div id="oldActions" class="actions"></div>
-        <p id="oldStatus" class="status">-</p>
-        <div class="price-row">
-          <span id="tqqqPrice" class="price current">-</span>
-          <span class="slash">/</span>
-          <span id="tqqqSma" class="price ma">-</span>
+        <div class="legend" aria-label="원조 그래프 설명">
+          <span><i style="--legend:#80dfff"></i>TQQQ 현재가</span>
+          <span><i style="--legend:#afd485"></i>TQQQ 200일선</span>
         </div>
+        <div id="oldActions" class="actions"></div><p id="oldStatus" class="status">-</p>
+        <div class="price-row"><span id="tqqqPrice" class="price current">-</span><span class="slash">/</span><span id="tqqqSma" class="price ma">-</span></div>
       </article>
 
       <article class="card" id="fgiCard">
-        <div class="card-head">
-          <div>
-            <h2>공포와 탐욕 지수</h2>
-            <p class="muted">CNN Fear &amp; Greed Index</p>
-          </div>
-          <a href="https://edition.cnn.com/markets/fear-and-greed" target="_blank" rel="noopener">원문</a>
-        </div>
-        <div class="fgi-summary">
-          <div class="gauge-wrap">
-            <canvas id="gauge"></canvas>
-            <strong id="fgiValue">-</strong>
-          </div>
-          <div>
-            <p id="fgiRating" class="fgi-rating">-</p>
-            <p class="metric"><span id="fgiNow">현재 -</span> / <span id="fgiAvg">30일 평균 -</span></p>
-          </div>
-        </div>
+        <div class="card-head"><div><h2>공포와 탐욕 지수</h2><p class="muted">CNN Fear &amp; Greed Index</p></div><a href="https://edition.cnn.com/markets/fear-and-greed" target="_blank" rel="noopener">원문</a></div>
+        <div class="fgi-summary"><div class="gauge-wrap"><canvas id="gauge"></canvas><strong id="fgiValue">-</strong></div><div><p id="fgiRating" class="fgi-rating">-</p><p class="metric"><span id="fgiNow">현재 -</span> / <span id="fgiAvg">30일 평균 -</span></p></div></div>
         <div class="chart-box compact"><canvas id="fgiChart"></canvas></div>
       </article>
+
+      <article class="card card-wide strategy-card">
+        <div class="card-head"><div><h2>📈 아기티큐200큐큐단(베타) 투자법 핵심 요약</h2><p class="muted">대시보드 계산 기준과 매매 원칙</p></div></div>
+        <div class="strategy-grid">
+          <section><h3>1. 🎯 기본 기준 <small>Core Standard</small></h3><p><b>기준 지표:</b> 나스닥 100 원본 지수(QQQ) 종가 및 200일 이동평균선</p><p><b>완충 밴드:</b> QQQ 200일선 기준 상단 +2%, 하단 -2%</p><p><b>활용 자산:</b> TQQQ(공격수), SPYM(방어/스위칭용), SGOV(현금 대기용)</p></section>
+          <section><h3>2. 🟢 매수 및 관망 기준 <small>Buy &amp; Hold</small></h3><p><b>상향 돌파:</b> QQQ가 상단 밴드(+2%)를 위로 돌파하면 TQQQ 매수</p><p><b>매수 방식:</b> SGOV 자금을 활용해 TQQQ를 3분할 매수</p><p><b>밴드 내 관망:</b> 상단과 하단 사이에서는 기존 포지션 유지</p></section>
+          <section><h3>3. 💰 익절 기준 <small>Profit Taking</small></h3><p><b>소익절:</b> 기준 TQQQ 가격 대비 +10%, +25%, +50% 도달 시 현재 잔고의 10% 매도</p><p><b>대익절:</b> +100%, +200%, +400%, +800%… 도달 시 현재 잔고의 50% 매도</p><p><b>익절금 스위칭:</b> 매도금은 SPYM으로 전환해 수익 잠금</p></section>
+          <section><h3>4. 🛡️ 하락 방어 및 매도 기준 <small>Defense &amp; Sell</small></h3><p><b>TS:</b> 상승 사이클 내 TQQQ 최고점 대비 -25% 하락 시 발동</p><p><b>TS 스위칭:</b> TQQQ 보유 수량의 절반을 SPYM으로 전환</p><p><b>하향 이탈:</b> QQQ가 하단 밴드(-2%) 이탈 시 TQQQ·SPYM 전량 매도 후 SGOV 대피</p></section>
+        </div>
+        <p class="strategy-note">※ 익절 기준가는 가장 최근 QQQ 상단 밴드 돌파일의 TQQQ 종가를 사용합니다. 실제 3분할 매수의 평단가와는 차이가 날 수 있습니다.</p>
+      </article>
     </section>
-
-    <footer>
-      <p>본 화면은 투자 판단 참고용이며 투자 권유가 아닙니다.</p>
-    </footer>
+    <footer><p>본 화면은 투자 판단 참고용이며 투자 권유가 아닙니다.</p></footer>
   </main>
-
   <script src="app.js" defer></script>
 </body>
 </html>
